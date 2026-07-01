@@ -1,0 +1,16 @@
+.env
+.idea/
+__pycache__/
+*.pyc
+
+# Large local tools and build artifacts
+colmap/
+vcpkg/
+ffmpeg.exe
+Temp/
+
+# Local media and generated data
+*.mp4
+*.wav
+test/
+image/
