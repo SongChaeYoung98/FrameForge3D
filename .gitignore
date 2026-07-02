@@ -14,3 +14,7 @@ Temp/
 *.wav
 test/
 image/
+video/
+extracted_frames/
+extract image collection/
+test1/

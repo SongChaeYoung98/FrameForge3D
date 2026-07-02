@@ -1,4 +1,4 @@
-﻿"""
+"""
 __author__      = "Song Chae Young"
 __date__        = "Sep 22, 2025"
 __email__       = "0.0yeriel@gmail.com"
@@ -17,6 +17,7 @@ from pathlib import Path
 
 import cv2
 
+project_root = Path(__file__).resolve().parent
 system_os = platform.system()
 xvfb_available = False
 if system_os != "Windows":
@@ -27,23 +28,23 @@ if system_os != "Windows":
         xvfb_available = False
 
 if system_os == "Windows":
-    default_video_path = Path(r"C:\Users\sooji\PycharmProjects\check-lab-python-3d-script\test.mp4")
-    default_image_path = Path(r"C:\Users\sooji\PycharmProjects\check-lab-python-3d-script\image")
-    work_dir = Path(r"C:\Users\sooji\PycharmProjects\check-lab-python-3d-script\test")
-    colmap_bat = Path(r"C:\Users\sooji\PycharmProjects\check-lab-python-3d-script\colmap\COLMAP.bat")
+    default_video_path = project_root / "test.mp4"
+    default_image_path = project_root / "image"
+    work_dir = project_root / "test"
+    colmap_bat = project_root / "colmap" / "COLMAP.bat"
     colmap_bin_dir = colmap_bat.parent
-    openmvs_bin_dir = Path(r"C:\Users\sooji\PycharmProjects\check-lab-python-3d-script\vcpkg\installed\x64-windows\tools\openmvs")
+    openmvs_bin_dir = project_root / "vcpkg" / "installed" / "x64-windows" / "tools" / "openmvs"
 else:
-    default_video_path = Path("/home/hosting_users/dev/check_report/3d/boat modeling.mp4")
-    default_image_path = Path("/home/hosting_users/dev/check_report/3d/image")
-    work_dir = Path("/home/hosting_users/dev/check_report/3d/test")
+    default_video_path = project_root / "boat modeling.mp4"
+    default_image_path = project_root / "image"
+    work_dir = project_root / "test"
     colmap_bin_dir = Path("/usr/local/src/colmap/build/src/colmap/exe")
     colmap_bat = colmap_bin_dir / "colmap"
     openmvs_bin_dir = Path("/usr/local/src/vcpkg/installed/x64-linux/tools/openmvs")
 
 
-# DEFAULT_INPUT_MODE = "images"
-DEFAULT_INPUT_MODE = "video"
+DEFAULT_INPUT_MODE = "images"
+# DEFAULT_INPUT_MODE = "video"
 DEFAULT_FRAME_COUNT = 100
 DEFAULT_ROTATE_180 = True
 
@@ -65,9 +66,9 @@ def resolve_default_input_path(input_mode: str) -> Path:
         return default_video_path
 
     image_candidates = [
-        default_image_path,
         work_dir / "images",
         Path(__file__).resolve().parent / "image",
+        default_image_path,
     ]
     for candidate in image_candidates:
         if has_supported_images(candidate):
@@ -306,9 +307,22 @@ def colmap_mapper(database_path: Path, target_images_dir: Path, target_sparse_di
         raise RuntimeError(f"COLMAP mapper failed with return code {result.returncode}")
 
 
+def select_best_sparse_model_dir(target_sparse_dir: Path) -> Path:
+    candidate_dirs = [
+        path for path in target_sparse_dir.iterdir()
+        if path.is_dir() and path.name.isdigit() and (path / "points3D.bin").exists()
+    ]
+    if not candidate_dirs:
+        raise RuntimeError(f"No COLMAP sparse model directories found in: {target_sparse_dir}")
+
+    best_dir = max(candidate_dirs, key=lambda path: (path / "points3D.bin").stat().st_size)
+    print(f"==> Selected COLMAP sparse model: {best_dir.name}")
+    return best_dir
+
+
 def colmap_model_converter(target_sparse_dir: Path):
-    sparse_bin_dir = target_sparse_dir / "0"
-    sparse_txt_dir = target_sparse_dir / "0_txt"
+    sparse_bin_dir = select_best_sparse_model_dir(target_sparse_dir)
+    sparse_txt_dir = target_sparse_dir / f"{sparse_bin_dir.name}_txt"
     sparse_txt_dir.mkdir(exist_ok=True)
 
     print("==> Converting COLMAP binary model to TXT format...")
@@ -329,9 +343,8 @@ def colmap_model_converter(target_sparse_dir: Path):
         if src.exists():
             shutil.copy(src, dst)
 
-    print("==> Created 'sparse' folder inside 0_txt and copied TXT files for InterfaceCOLMAP.exe")
+    print(f"==> Created 'sparse' folder inside {sparse_txt_dir.name} and copied TXT files for InterfaceCOLMAP.exe")
     return sparse_txt_dir
-
 
 def colmap_to_openmvs(sparse_txt_dir: Path, scene_mvs: Path):
     print("==> Converting COLMAP TXT model to OpenMVS scene.mvs...")
@@ -442,4 +455,3 @@ def run_pipeline(input_mode: str = DEFAULT_INPUT_MODE, input_path: Path | None =
 
 if __name__ == "__main__":
     run_pipeline()
-

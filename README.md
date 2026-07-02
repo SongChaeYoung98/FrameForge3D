@@ -21,7 +21,7 @@ It performs the pipeline below:
 
 - `init_3d_reconstruction.py`: Main 3D reconstruction pipeline.
 - `prepare_3d.py`: Older helper script for frame extraction and sparse COLMAP setup.
-- `synth_fft_from_3d_click.py`: Separate audio experiment that synthesizes audio segments from selected image coordinates.
+- `extract_video_frames.py`: Standalone utility that extracts frames from videos under `video/` into `extracted_frames/`.
 - `requirements.txt`: Python package dependencies used by the scripts.
 
 ## Recommended Directory Layout
@@ -32,7 +32,7 @@ The current scripts assume this layout under the repository root:
 FrameForge3D/
 |-- init_3d_reconstruction.py
 |-- prepare_3d.py
-|-- synth_fft_from_3d_click.py
+|-- extract_video_frames.py
 |-- requirements.txt
 |-- test.mp4                    # optional video input for the main pipeline
 |-- image/                      # optional image input folder for the main pipeline
@@ -87,7 +87,7 @@ For Windows, the practical setup is:
 These are not required for the main reconstruction pipeline, but are used by the secondary scripts:
 
 - `ffmpeg.exe` for `prepare_3d.py`
-- `librosa`, `matplotlib`, `Pillow`, and `soundfile` for `synth_fft_from_3d_click.py`
+- No additional Python packages beyond `requirements.txt` for the current secondary scripts.
 
 ## Installation Guide
 
@@ -210,7 +210,7 @@ Open `init_3d_reconstruction.py` and confirm these values match your machine:
 
 Also note:
 
-- `synth_fft_from_3d_click.py` includes example Windows paths that should be changed before running it.
+- `extract_video_frames.py` looks for videos under `video/` and writes frames under `extracted_frames/`.
 - `prepare_3d.py` expects `ffmpeg.exe` next to the script.
 
 ## How to Run
@@ -359,4 +359,5 @@ Possible causes:
 ## Suggested Next Improvement
 
 The most valuable cleanup would be replacing the hardcoded path block with command-line arguments or environment-based configuration, so the repository works without local file edits.
+
 
